@@ -19,7 +19,6 @@ namespace Beryllium.Bot.Migrations
             modelBuilder.Entity("Beryllium.Bot.Models.GuildSettings", b =>
                 {
                     b.Property<ulong>("GuildId")
-                        .ValueGeneratedOnAdd()
                         .HasColumnType("INTEGER");
 
                     b.Property<bool>("ModerationEnabled")

@@ -21,6 +21,7 @@ public class BotDbContext : DbContext
         modelBuilder.Entity<GuildSettings>(entity =>
         {
             entity.HasKey(e => e.GuildId);
+            entity.Property(e => e.GuildId).ValueGeneratedNever();
             entity.Property(e => e.Prefix).HasMaxLength(10).HasDefaultValue("!");
         });
     }

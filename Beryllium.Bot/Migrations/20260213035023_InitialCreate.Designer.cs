@@ -10,7 +10,7 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace Beryllium.Bot.Migrations
 {
     [DbContext(typeof(BotDbContext))]
-    [Migration("20260213034824_InitialCreate")]
+    [Migration("20260213035023_InitialCreate")]
     partial class InitialCreate
     {
         /// <inheritdoc />
@@ -22,7 +22,6 @@ namespace Beryllium.Bot.Migrations
             modelBuilder.Entity("Beryllium.Bot.Models.GuildSettings", b =>
                 {
                     b.Property<ulong>("GuildId")
-                        .ValueGeneratedOnAdd()
                         .HasColumnType("INTEGER");
 
                     b.Property<bool>("ModerationEnabled")

@@ -14,8 +14,7 @@ namespace Beryllium.Bot.Migrations
                 name: "GuildSettings",
                 columns: table => new
                 {
-                    GuildId = table.Column<ulong>(type: "INTEGER", nullable: false)
-                        .Annotation("Sqlite:Autoincrement", true),
+                    GuildId = table.Column<ulong>(type: "INTEGER", nullable: false),
                     Prefix = table.Column<string>(type: "TEXT", maxLength: 10, nullable: false, defaultValue: "!"),
                     ModerationEnabled = table.Column<bool>(type: "INTEGER", nullable: false)
                 },
