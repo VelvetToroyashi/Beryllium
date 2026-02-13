@@ -1,5 +1,7 @@
 using System.ComponentModel;
 using Beryllium.Bot.Data;
+using Beryllium.Bot.Features.Logging.Notifications;
+using Beryllium.Bot.Models.DTO;
 using Beryllium.Bot.Models.Entities;
 using FluentValidation;
 using Mediator;
@@ -59,18 +61,20 @@ public static class IssueKick
             }
             
             var infractionResult = InfractionEntity.CreateKick(command.GuildId, command.UserId, command.ModeratorId, commandReason, command.IsAutomated);
-
+            
             if (!infractionResult.IsSuccess)
                 return Result.FromError(infractionResult.Error);
 
             var infraction = infractionResult.Entity;
 
-            _ = await mediator.Send(new NotifyUserOfInfraction.Command(command.GuildId, command.ModeratorId, command.UserId, InfractionType.Kick, commandReason, null), cancellationToken);
+            dbContextFactory.Infractions.Add(infraction);
+            await dbContextFactory.SaveChangesAsync(cancellationToken);
+            
+            await mediator.Send(new NotifyUserOfInfraction.Command(command.GuildId, command.ModeratorId, command.UserId, InfractionType.Kick, commandReason,  ExpiresAt: null), cancellationToken);
+            await mediator.Send(new InfractionCreatedNotification(infraction.ToDTO()), cancellationToken);
             
             var kickResult = await guildApi.RemoveGuildMemberAsync(command.GuildId, command.UserId, commandReason[..100], cancellationToken);
 
-            dbContextFactory.Infractions.Add(infraction);
-            await dbContextFactory.SaveChangesAsync(cancellationToken);
 
             return kickResult;
         }
