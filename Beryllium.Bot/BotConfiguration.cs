@@ -1,4 +1,4 @@
-namespace Beryllium.Bot.Services;
+namespace Beryllium.Bot;
 
 /// <summary>
 /// Configuration settings for the Discord bot.

@@ -1,5 +1,5 @@
-﻿using Beryllium.Bot.Data;
-using Beryllium.Bot.Services;
+﻿using Beryllium.Bot;
+using Beryllium.Bot.Data;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
@@ -30,8 +30,7 @@ var host = Host.CreateDefaultBuilder(args)
         services.AddDiscordService(_ => botConfig.Token);
 
         // Add command support
-        services.AddCommandTree()
-            .WithCommandGroup<Beryllium.Bot.Commands.PingCommands>();
+        services.AddCommandTree();
     })
     .ConfigureLogging((context, logging) =>
     {

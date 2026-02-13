@@ -1,18 +1,15 @@
 using Microsoft.EntityFrameworkCore;
 using Beryllium.Bot.Models;
+using Beryllium.Bot.Models.Entities;
 
 namespace Beryllium.Bot.Data;
 
-/// <summary>
-/// Database context for the Beryllium bot.
-/// </summary>
-public class BotDbContext : DbContext
+public class BotDbContext
+(
+    DbContextOptions<BotDbContext> options
+) : DbContext(options)
 {
-    public BotDbContext(DbContextOptions<BotDbContext> options) : base(options)
-    {
-    }
-
-    public DbSet<GuildSettings> GuildSettings => Set<GuildSettings>();
+    public DbSet<InfractionEntity> Infractions => Set<InfractionEntity>();
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
@@ -22,7 +19,6 @@ public class BotDbContext : DbContext
         {
             entity.HasKey(e => e.GuildId);
             entity.Property(e => e.GuildId).ValueGeneratedNever();
-            entity.Property(e => e.Prefix).HasMaxLength(10).HasDefaultValue("!");
         });
     }
 }
