@@ -1,7 +1,6 @@
 using System.ComponentModel;
 using Beryllium.Bot.Data;
 using Beryllium.Bot.Features.Logging.Notifications;
-using Beryllium.Bot.Models.DTO;
 using Beryllium.Bot.Models.Entities;
 using FluentValidation;
 using Mediator;
@@ -42,7 +41,7 @@ public static class IssueKick
     (
         IMediator mediator,
         IDiscordRestGuildAPI guildApi,
-        BotDbContext dbContextFactory
+        BotDbContext dbContext
     ) : ICommandHandler<Command, Result>
     {
         public async ValueTask<Result> Handle
@@ -67,12 +66,13 @@ public static class IssueKick
 
             var infraction = infractionResult.Entity;
 
-            dbContextFactory.Infractions.Add(infraction);
-            await dbContextFactory.SaveChangesAsync(cancellationToken);
+            dbContext.Infractions.Add(infraction);
+            await dbContext.SaveChangesAsync(cancellationToken);
             
-            await mediator.Send(new NotifyUserOfInfraction.Command(command.GuildId, command.ModeratorId, command.UserId, InfractionType.Kick, commandReason,  ExpiresAt: null), cancellationToken);
-            await mediator.Send(new InfractionCreatedNotification(infraction.ToDTO()), cancellationToken);
+            var infractionDTO = infraction.ToDTO();
             
+            await mediator.Send(new NotifyUserOfInfraction.Command(infractionDTO), cancellationToken);
+            await mediator.Send(new InfractionCreatedNotification(infractionDTO), cancellationToken);
             var kickResult = await guildApi.RemoveGuildMemberAsync(command.GuildId, command.UserId, commandReason[..100], cancellationToken);
 
 
