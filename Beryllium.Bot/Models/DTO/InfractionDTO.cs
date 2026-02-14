@@ -13,6 +13,5 @@ public record InfractionDTO
     DateTimeOffset? ExpiresAt,
     string Reason,
     bool IsActive,
-    bool IsHidden,
-    bool IsAutomated
+    InfractionStatus Status
 );

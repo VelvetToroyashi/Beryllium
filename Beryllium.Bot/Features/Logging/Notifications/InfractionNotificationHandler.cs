@@ -1,5 +1,6 @@
 using Beryllium.Bot.Data;
 using Beryllium.Bot.Models.DTO;
+using Beryllium.Bot.Models.Entities;
 using Mediator;
 using Remora.Discord.API.Abstractions.Objects;
 using Remora.Discord.API.Abstractions.Rest;
@@ -41,7 +42,7 @@ public class InfractionNotificationHandler(BotDbContext dbContext, IDiscordRestC
         await channels.CreateMessageAsync(channel.ID, embeds: GetEmbedForInfraction(notification.Infraction), ct: cancellationToken);
     }
 
-    private Optional<IReadOnlyList<IEmbed>> GetEmbedForInfraction
+    private static Optional<IReadOnlyList<IEmbed>> GetEmbedForInfraction
     (
         InfractionDTO notificationInfraction
     )
@@ -51,7 +52,7 @@ public class InfractionNotificationHandler(BotDbContext dbContext, IDiscordRestC
             new EmbedField("Moderator", $"<@{notificationInfraction.ModeratorId}>", true),
             new EmbedField("Target", $"<@{notificationInfraction.UserId}>", true),
             new EmbedField("Type", notificationInfraction.Type.ToString(), true),
-            new EmbedField("Automatic?", notificationInfraction.IsAutomated.ToString(), true)
+            new EmbedField("Automatic?", notificationInfraction.Status.HasFlag(InfractionStatus.Automated).ToString(), true)
         ];
 
         if (notificationInfraction.ExpiresAt is not null)

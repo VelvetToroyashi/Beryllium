@@ -6,6 +6,15 @@ namespace Beryllium.Bot.Models.Entities;
 
 using System;
 
+[Flags]
+public enum InfractionStatus
+{
+    None = 0,
+    Automated = 1 << 0,
+    Hidden = 1 << 1,
+    Pardoned = 1 << 2
+}
+
 public enum InfractionType
 {
     Warning,
@@ -31,19 +40,12 @@ public class InfractionEntity
     public DateTimeOffset CreatedAt { get; private set; } = DateTimeOffset.UtcNow;
     public DateTimeOffset? ExpiresAt { get; private set; }
     
-    // Automated in this context refers to say, Discord AutoMod triggers -> Create an associated warning automatically
-    // OR external bot bans user -> track that as well; UserID + Reason tells us this much, but this also allows for,
-    // say, choosing to ignore automated bans and/or logging them, since another bot would likely already have
-    // logging for such. We'll put actual documentation to this once the bot is more fleshed out.
-    public bool IsAutomated { get; private set; }
-    
-    // Not shown in /case log, but can still be queried directly.
-    public bool IsHidden { get; private set; }
+    public InfractionStatus Status { get; private set; }
+
     public bool IsExpired => ExpiresAt <= DateTime.UtcNow;
     // This is the one we care about.
-    public bool IsActive => !IsHidden && !IsPardoned && !IsExpired;
+    public bool IsActive => !Status.HasFlag(InfractionStatus.Hidden) && !Status.HasFlag(InfractionStatus.Pardoned) && !IsExpired;
     
-    public bool IsPardoned { get; private set; }
     public int? PardonId { get; private set; }
     public Snowflake? PardonedBy { get; private set; }
     
@@ -60,8 +62,7 @@ public class InfractionEntity
         ExpiresAt,
         Reason,
         IsActive,
-        IsHidden,
-        IsAutomated
+        Status
     );
     
     private static Result<InfractionEntity> CreateInternal
@@ -86,7 +87,8 @@ public class InfractionEntity
             UserId = userId,
             ModeratorId = moderatorId,
             Type = type,
-            Reason = reason ?? "No reason provided."
+            Reason = reason ?? "No reason provided.",
+            Status = isAutomated ? InfractionStatus.Automated : InfractionStatus.None
         };
 
         if (duration is not null)
@@ -171,7 +173,7 @@ public class InfractionEntity
             Type = InfractionType.Pardon,
             Reason = reason ?? "No reason provided.",
             PardonId = infractionId,
-            IsAutomated = isAutomated
+            Status = isAutomated ? InfractionStatus.Automated : InfractionStatus.None
         };
 
         return infraction;
@@ -179,10 +181,10 @@ public class InfractionEntity
 
     public Result Hide(bool isHidden)
     {
-        if (isHidden == IsHidden)
-            return Result.FromSuccess(); // No-op is fine here.
-        
-        IsHidden = isHidden;
+        if (isHidden)
+            Status |= InfractionStatus.Hidden;
+        else
+            Status &= ~InfractionStatus.Hidden;
 
         return Result.Success;
 
@@ -190,13 +192,13 @@ public class InfractionEntity
 
     public Result Pardon()
     {
-        if (IsPardoned)
+        if (Status.HasFlag(InfractionStatus.Pardoned))
             return new InvalidOperationError("This infraction has already been pardoned.");
 
         if (Type is InfractionType.Unban or InfractionType.Unmute or InfractionType.Pardon)
             return new InvalidOperationError($"{Type} infractions cannot be pardoned.");
         
-        IsPardoned = true;
+        Status |= InfractionStatus.Pardoned;
         PardonedBy = ModeratorId;
 
         return Result.Success;
